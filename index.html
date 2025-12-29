@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Remote Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+      background: #111;
+      color: white;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .on { background: green; color: white; }
+    .off { background: red; color: white; }
+  </style>
+</head>
+
+<body>
+
+  <h1 id="status">الحالة: OFF</h1>
+
+  <button class="on" onclick="turnOn()">ON</button>
+  <button class="off" onclick="turnOff()">OFF</button>
+
+  <script>
+    function turnOn() {
+      document.body.style.background = "green";
+      document.getElementById("status").innerText = "الحالة: ON";
+    }
+
+    function turnOff() {
+      document.body.style.background = "#111";
+      document.getElementById("status").innerText = "الحالة: OFF";
+    }
+  </script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>Remote Control</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+      background: #111;
+      color: white;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 10px;
+    }
+
+    .on { background: green; color: white; }
+    .off { background: red; color: white; }
+  </style>
+</head>
+
+<body>
+
+  <h1 id="status">الحالة: OFF</h1>
+
+  <button class="on" onclick="turnOn()">ON</button>
+  <button class="off" onclick="turnOff()">OFF</button>
+
+  <script>
+    function turnOn() {
+      document.body.style.background = "green";
+      document.getElementById("status").innerText = "الحالة: ON";
+    }
+
+    function turnOff() {
+      document.body.style.background = "#111";
+      document.getElementById("status").innerText = "الحالة: OFF";
+    }
+  </script>
+
+</body>
+</html>
