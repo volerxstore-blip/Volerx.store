@@ -75,36 +75,29 @@ header {
 <div class="products" id="products"></div>
 
 <script>
-const products = [
-  {
-    name: "تمر مجدول",
-    price: "15 ₪",
-    image: "https://via.placeholder.com/300x200"
-  },
-  {
-    name: "زيت زيتون",
-    price: "30 ₪",
-    image: "https://via.placeholder.com/300x200"
-  },
-  {
-    name: "قمر الدين",
-    price: "10 ₪",
-    image: "https://via.placeholder.com/300x200"
-  }
-];
-
 const container = document.getElementById("products");
 
-products.forEach(p => {
-  container.innerHTML += `
-    <div class="product">
-      <img src="${p.image}">
-      <h3>${p.name}</h3>
-      <div class="price">${p.price}</div>
-      <button class="buy">اطلب الآن</button>
-    </div>
-  `;
-});
+// رابط CSV الخاص بالـ Google Sheet (ضع الرابط الخاص بك هنا)
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT4k0hjLmCAeW71hi6RIohuuqmsPXoxOuqdVXUoudo-FC6BeC1-1m_TTlLJk0rlYhP4pLlSqwlU1mNg/pub?gid=2125757368&single=true&output=csv";
+
+fetch(SHEET_CSV_URL)
+  .then(response => response.text())
+  .then(data => {
+    const rows = data.split("\n").slice(1); // تخطي العنوان
+    rows.forEach(row => {
+      if(!row) return; // تجاهل الصفوف الفارغة
+      const [timestamp, name, price, image] = row.split(",");
+      container.innerHTML += `
+        <div class="product">
+          <img src="${image}">
+          <h3>${name}</h3>
+          <div class="price">${price}</div>
+          <button class="buy">اطلب الآن</button>
+        </div>
+      `;
+    });
+  })
+  .catch(error => console.error("خطأ في قراءة البيانات:", error));
 </script>
 
 </body>
