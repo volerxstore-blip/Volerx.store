@@ -5,94 +5,107 @@
 <title>منتجاتي</title>
 
 <style>
+*{box-sizing:border-box}
 body{
   margin:0;
-  font-family:Arial;
-  background:#f4f4f4;
-  padding-bottom:20px;
+  font-family:Arial, sans-serif;
+  background:#f2f2f2;
 }
 
-/* Banner */
+/* ===== Banner ===== */
 .banner{
-  background:url("PUT_PROJECT_IMAGE_HERE") center/cover no-repeat;
   height:160px;
+  background:url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png") center/cover no-repeat;
   display:flex;
   align-items:center;
   justify-content:center;
   color:white;
-  font-size:26px;
+  font-size:28px;
   font-weight:bold;
-  text-shadow:0 2px 6px black;
+  text-shadow:0 3px 8px black;
 }
 
-/* Loader */
-.loader{
+/* ===== Loader ===== */
+#loader{
   text-align:center;
-  margin:40px;
+  padding:40px;
   font-size:18px;
 }
 
-/* Grid */
+/* ===== Grid ===== */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
   gap:15px;
   padding:15px;
 }
+
 .card{
-  background:#fff;
+  background:white;
   border-radius:12px;
   overflow:hidden;
   box-shadow:0 2px 6px rgba(0,0,0,.15);
   cursor:pointer;
 }
+
 .card img{
   width:100%;
   height:160px;
   object-fit:cover;
 }
+
 .info{
   padding:10px;
   text-align:center;
   font-weight:bold;
 }
+
 .hidden{display:none}
 
-/* Slider */
+/* ===== Slider ===== */
 .slider{
+  position:relative;
   height:160px;
   overflow:hidden;
 }
-.slider-track{
-  animation:slide 8s infinite;
+.slider img{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  animation:fade 9s infinite;
 }
-@keyframes slide{
-  0%{transform:translateY(0)}
-  33%{transform:translateY(-160px)}
-  66%{transform:translateY(-320px)}
-  100%{transform:translateY(0)}
+.slider img:nth-child(1){animation-delay:0s}
+.slider img:nth-child(2){animation-delay:3s}
+.slider img:nth-child(3){animation-delay:6s}
+
+@keyframes fade{
+  0%{opacity:0}
+  10%{opacity:1}
+  30%{opacity:1}
+  40%{opacity:0}
+  100%{opacity:0}
 }
 
-/* Lightbox */
-.lightbox{
+/* ===== Lightbox ===== */
+#lightbox{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.9);
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:999;
+  z-index:1000;
 }
-.lightbox img{
+#lightbox img{
   max-width:90%;
   max-height:90%;
 }
-.close{
+#close{
   position:absolute;
   top:15px;
   right:20px;
+  font-size:32px;
   color:white;
-  font-size:30px;
   cursor:pointer;
 }
 </style>
@@ -102,85 +115,94 @@ body{
 
 <div class="banner">منتجاتي</div>
 
-<div id="loader" class="loader">⏳ جاري تحميل المنتجات...</div>
+<div id="loader">⏳ جاري تحميل المنتجات...</div>
 
 <div id="categories" class="grid hidden"></div>
 <div id="products" class="grid hidden"></div>
 
-<div id="lightbox" class="lightbox hidden">
-  <span class="close" onclick="closeImage()">✕</span>
-  <img id="lightImg">
+<div id="lightbox" class="hidden">
+  <span id="close" onclick="closeImg()">✕</span>
+  <img id="bigImg">
 </div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoSpH_GzvjOPhiqUV6PPgdBmuJsfh1xjqKOAIBTTn5D9DfWGJdyV6g0RbjLAP--HlLjJjO9tI2bB0F/pub?gid=992873624&single=true&output=csv";
-let allProducts=[];
+let data=[];
 
+/* ===== Fetch CSV ===== */
 fetch(SHEET_URL)
 .then(r=>r.text())
-.then(csv=>{
-  const rows=csv.split("\n").map(r=>r.split(","));
-  const headers=rows[0].map(h=>h.trim());
+.then(text=>{
+  const lines=text.trim().split("\n");
+  const headers=lines[0].split(",").map(h=>h.trim());
 
-  rows.slice(1).forEach(r=>{
+  for(let i=1;i<lines.length;i++){
+    const row=lines[i].split(",");
     let obj={};
-    headers.forEach((h,i)=>obj[h]=r[i]);
-    if(obj["اسم المنتج"]) allProducts.push(obj);
-  });
+    headers.forEach((h,idx)=>obj[h]=row[idx]);
+    if(obj["اسم المنتج"]) data.push(obj);
+  }
 
-  loader.classList.add("hidden");
+  loader.style.display="none";
   showCategories();
+})
+.catch(()=>{
+  loader.innerText="❌ فشل تحميل البيانات";
 });
 
+/* ===== Categories ===== */
 function showCategories(){
   history.pushState({page:"cats"},"","");
   categories.innerHTML="";
-  const cats=[...new Set(allProducts.map(p=>p["القسم"]))];
+  products.classList.add("hidden");
+  categories.classList.remove("hidden");
+
+  const cats=[...new Set(data.map(p=>p["القسم"]))];
 
   cats.forEach(cat=>{
-    const imgs=allProducts.filter(p=>p["القسم"]===cat).map(p=>p["رابط الصورة"]);
+    const imgs=data.filter(p=>p["القسم"]===cat).map(p=>p["رابط الصورة"]).slice(0,3);
+
     categories.innerHTML+=`
       <div class="card" onclick="openCategory('${cat}')">
         <div class="slider">
-          <div class="slider-track">
-            ${imgs.map(i=><img src="${i}">).join("")}
-          </div>
+          ${imgs.map(i=><img src="${i}">).join("")}
         </div>
         <div class="info">${cat}</div>
-      </div>`;
+      </div>
+    `;
   });
-
-  categories.classList.remove("hidden");
-  products.classList.add("hidden");
 }
 
+/* ===== Products ===== */
 function openCategory(cat){
   history.pushState({page:"products"},"","");
   products.innerHTML="";
-  allProducts.filter(p=>p["القسم"]===cat).forEach(p=>{
+  categories.classList.add("hidden");
+  products.classList.remove("hidden");
+
+  data.filter(p=>p["القسم"]===cat).forEach(p=>{
     products.innerHTML+=`
-      <div class="card" onclick="openImage('${p["رابط الصورة"]}')">
-        <img src="${p["رابط الصورة"]}">
+      <div class="card">
+        <img src="${p["رابط الصورة"]}" onclick="openImg('${p["رابط الصورة"]}')">
         <div class="info">
           ${p["اسم المنتج"]}<br>
           ${p["السعر"]} ₪
         </div>
-      </div>`;
+      </div>
+    `;
   });
-
-  products.classList.remove("hidden");
-  categories.classList.add("hidden");
 }
 
-function openImage(src){
-  lightImg.src=src;
+/* ===== Lightbox ===== */
+function openImg(src){
+  bigImg.src=src;
   lightbox.classList.remove("hidden");
 }
-
-function closeImage(){
+function closeImg(){
   lightbox.classList.add("hidden");
 }
 
+/* ===== Back Button ===== */
 window.onpopstate=()=>{
   showCategories();
 };
