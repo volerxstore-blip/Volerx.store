@@ -2,20 +2,37 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>المتجر</title>
+<title>منتجاتي</title>
 
 <style>
 body{
   margin:0;
   font-family:Arial;
   background:#f4f4f4;
-  padding-bottom:70px;
+  padding-bottom:20px;
 }
+
+/* Banner */
+.banner{
+  background:url("PUT_PROJECT_IMAGE_HERE") center/cover no-repeat;
+  height:160px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:26px;
+  font-weight:bold;
+  text-shadow:0 2px 6px black;
+}
+
+/* Loader */
 .loader{
   text-align:center;
-  margin-top:40px;
+  margin:40px;
   font-size:18px;
 }
+
+/* Grid */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
@@ -27,6 +44,7 @@ body{
   border-radius:12px;
   overflow:hidden;
   box-shadow:0 2px 6px rgba(0,0,0,.15);
+  cursor:pointer;
 }
 .card img{
   width:100%;
@@ -36,42 +54,66 @@ body{
 .info{
   padding:10px;
   text-align:center;
+  font-weight:bold;
 }
 .hidden{display:none}
 
-/* Bottom Bar */
-.bottom-bar{
-  position:fixed;
-  bottom:0;
-  width:100%;
-  background:#111;
-  display:flex;
-  justify-content:center;
-  padding:12px 0;
+/* Slider */
+.slider{
+  height:160px;
+  overflow:hidden;
 }
-.bottom-bar button{
-  background:none;
+.slider-track{
+  animation:slide 8s infinite;
+}
+@keyframes slide{
+  0%{transform:translateY(0)}
+  33%{transform:translateY(-160px)}
+  66%{transform:translateY(-320px)}
+  100%{transform:translateY(0)}
+}
+
+/* Lightbox */
+.lightbox{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.lightbox img{
+  max-width:90%;
+  max-height:90%;
+}
+.close{
+  position:absolute;
+  top:15px;
+  right:20px;
   color:white;
-  border:none;
-  font-size:18px;
+  font-size:30px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
+<div class="banner">منتجاتي</div>
+
 <div id="loader" class="loader">⏳ جاري تحميل المنتجات...</div>
 
 <div id="categories" class="grid hidden"></div>
 <div id="products" class="grid hidden"></div>
 
-<div class="bottom-bar">
-  <button onclick="showCategories()">الأقسام</button>
+<div id="lightbox" class="lightbox hidden">
+  <span class="close" onclick="closeImage()">✕</span>
+  <img id="lightImg">
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSoSpH_GzvjOPhiqUV6PPgdBmuJsfh1xjqKOAIBTTn5D9DfWGJdyV6g0RbjLAP--HlLjJjO9tI2bB0F/pub?gid=992873624&single=true&output=csv";
-
+const SHEET_URL = "PUT_YOUR_CSV_LINK_HERE";
 let allProducts=[];
 
 fetch(SHEET_URL)
@@ -88,51 +130,60 @@ fetch(SHEET_URL)
 
   loader.classList.add("hidden");
   showCategories();
-})
-.catch(()=>{
-  loader.innerText="❌ فشل تحميل البيانات";
 });
 
 function showCategories(){
-  hideAll();
+  history.pushState({page:"cats"},"","");
   categories.innerHTML="";
   const cats=[...new Set(allProducts.map(p=>p["القسم"]))];
 
   cats.forEach(cat=>{
-    const img=allProducts.find(p=>p["القسم"]===cat)["رابط الصورة"];
+    const imgs=allProducts.filter(p=>p["القسم"]===cat).map(p=>p["رابط الصورة"]);
     categories.innerHTML+=`
       <div class="card" onclick="openCategory('${cat}')">
-        <img src="${img}">
-        <div class="info"><b>${cat}</b></div>
+        <div class="slider">
+          <div class="slider-track">
+            ${imgs.map(i=><img src="${i}">).join("")}
+          </div>
+        </div>
+        <div class="info">${cat}</div>
       </div>`;
   });
 
   categories.classList.remove("hidden");
+  products.classList.add("hidden");
 }
 
 function openCategory(cat){
-  hideAll();
+  history.pushState({page:"products"},"","");
   products.innerHTML="";
-  allProducts
-    .filter(p=>p["القسم"]===cat)
-    .forEach(p=>{
-      products.innerHTML+=`
-        <div class="card">
-          <img src="${p["رابط الصورة"]}">
-          <div class="info">
-            <b>${p["اسم المنتج"]}</b><br>
-            ${p["السعر"]} ₪
-          </div>
-        </div>`;
-    });
+  allProducts.filter(p=>p["القسم"]===cat).forEach(p=>{
+    products.innerHTML+=`
+      <div class="card" onclick="openImage('${p["رابط الصورة"]}')">
+        <img src="${p["رابط الصورة"]}">
+        <div class="info">
+          ${p["اسم المنتج"]}<br>
+          ${p["السعر"]} ₪
+        </div>
+      </div>`;
+  });
 
   products.classList.remove("hidden");
+  categories.classList.add("hidden");
 }
 
-function hideAll(){
-  categories.classList.add("hidden");
-  products.classList.add("hidden");
+function openImage(src){
+  lightImg.src=src;
+  lightbox.classList.remove("hidden");
 }
+
+function closeImage(){
+  lightbox.classList.add("hidden");
+}
+
+window.onpopstate=()=>{
+  showCategories();
+};
 </script>
 
 </body>
