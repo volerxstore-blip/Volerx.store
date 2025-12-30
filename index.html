@@ -12,7 +12,7 @@ body {
   background: #f5f5f5;
 }
 
-/* ====== HEADER ====== */
+/* ===== HEADER ===== */
 header {
   background: #0d6efd;
   color: #fff;
@@ -32,19 +32,19 @@ header {
   cursor: pointer;
 }
 
-/* ====== CONTAINERS ====== */
+/* ===== CONTAINER ===== */
 .container {
   padding: 15px;
 }
 
-/* ====== GRID ====== */
+/* ===== GRID ===== */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 15px;
 }
 
-/* ====== CARD ====== */
+/* ===== CARD ===== */
 .card {
   background: #fff;
   border-radius: 10px;
@@ -54,7 +54,7 @@ header {
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
-/* ====== IMAGE BOX ====== */
+/* ===== IMAGE BOX ===== */
 .image-box {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -67,7 +67,7 @@ header {
   object-fit: cover;
 }
 
-/* ====== TEXT ====== */
+/* ===== TEXT ===== */
 .card h3 {
   margin: 10px;
   font-size: 16px;
@@ -79,7 +79,7 @@ header {
   margin-bottom: 10px;
 }
 
-/* ====== CATEGORY TITLE ====== */
+/* ===== CATEGORY TITLE ===== */
 .category-title {
   grid-column: 1 / -1;
   margin: 25px 0 10px;
@@ -87,7 +87,7 @@ header {
   color: #0d6efd;
 }
 
-/* ====== LIGHTBOX ====== */
+/* ===== LIGHTBOX ===== */
 #lightbox {
   position: fixed;
   inset: 0;
@@ -114,12 +114,53 @@ header {
   cursor: pointer;
 }
 
-/* ====== LOADING ====== */
+/* ===== LOADING ===== */
 #loading {
   text-align: center;
   padding: 40px;
   font-size: 18px;
 }
+
+/* ====== LISTS UNDER ====== */
+#bottomLists {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px;
+  flex-wrap: wrap;
+}
+
+.listBox {
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+  width: 48%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.listBox h4 {
+  margin-top: 0;
+}
+
+.listBox ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.listBox ul li {
+  margin: 5px 0;
+  cursor: pointer;
+  color: #0d6efd;
+}
+.listBox ul li:hover {
+  text-decoration: underline;
+}
+
+/* ====== CART INPUT ====== */
+.cart input[type="number"] {
+  width: 50px;
+  margin-left: 5px;
+}
+
 </style>
 </head>
 
@@ -134,6 +175,18 @@ header {
   <div id="loading">⏳ جاري تحميل المنتجات...</div>
   <div id="categories" class="grid"></div>
   <div id="products" class="grid" style="display:none;"></div>
+
+  <!-- القوائم تحت -->
+  <div id="bottomLists">
+    <div class="listBox" id="categoryList">
+      <h4>الأقسام</h4>
+      <ul></ul>
+    </div>
+    <div class="listBox" id="cartList">
+      <h4>السلة</h4>
+      <ul></ul>
+    </div>
+  </div>
 </div>
 
 <!-- Lightbox -->
@@ -146,14 +199,16 @@ header {
 const categoriesContainer = document.getElementById("categories");
 const productsContainer = document.getElementById("products");
 const loading = document.getElementById("loading");
+const categoryList = document.querySelector("#categoryList ul");
+const cartList = document.querySelector("#cartList ul");
 
 // ====================
 // ضع هنا رابط Google Sheet الخاص بك بصيغة CSV
-// مثال: "https://docs.google.com/spreadsheets/d/ID/export?format=csv"
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQY3NsJAn1x4wBXXAQnEkZ5ynSfCSMfU0NpBQhDtMPKOdjfYhduKX8ow3W0wSWd34oz6n75XlvuWh0W/pub?gid=1489177387&single=true&output=csv";
 // ====================
 
 let categoriesData = {};
+let cart = {};
 
 fetch(SHEET_URL)
   .then(res => res.text())
@@ -176,6 +231,7 @@ fetch(SHEET_URL)
     });
 
     renderCategories();
+    renderCategoryList();
   })
   .catch(err => {
     loading.innerText = "❌ فشل تحميل البيانات، تحقق من الرابط";
@@ -200,6 +256,13 @@ function renderCategories() {
   });
 }
 
+function renderCategoryList() {
+  categoryList.innerHTML = "";
+  Object.keys(categoriesData).forEach(cat => {
+    categoryList.innerHTML += <li onclick="openCategory('${cat}')">${cat}</li>;
+  });
+}
+
 function openCategory(cat) {
   document.getElementById("title").innerText = cat;
   document.getElementById("backBtn").style.display = "block";
@@ -214,7 +277,8 @@ function openCategory(cat) {
           <img src="${p.image}" loading="lazy">
         </div>
         <h3>${p.name}</h3>
-        <div class="price">${p.price}</div>
+        <div class="price">${p.price} ₪</div>
+        <button onclick="addToCart('${p.name}','${p.price}','${p.image}')">أضف إلى السلة</button>
       </div>
     `;
   });
@@ -235,6 +299,41 @@ function openLightbox(src) {
 
 function closeLightbox() {
   document.getElementById("lightbox").style.display = "none";
+}
+
+// ===== CART =====
+function addToCart(name, price, image) {
+  if(cart[name]) {
+    cart[name].qty += 1;
+  } else {
+    cart[name] = {price: parseFloat(price), image, qty: 1};
+  }
+  renderCart();
+}
+
+function renderCart() {
+  cartList.innerHTML = "";
+  Object.keys(cart).forEach(key => {
+    const item = cart[key];
+    cartList.innerHTML += `
+      <li class="cart">
+        <img src="${item.image}" width="30" height="30">
+        ${key} - ${item.price} ₪
+        <input type="number" min="1" value="${item.qty}" onchange="updateQty('${key}', this.value)">
+        <button onclick="removeFromCart('${key}')">❌</button>
+      </li>
+    `;
+  });
+}
+
+function updateQty(name, val) {
+  cart[name].qty = parseInt(val) || 1;
+  renderCart();
+}
+
+function removeFromCart(name) {
+  delete cart[name];
+  renderCart();
 }
 </script>
 
