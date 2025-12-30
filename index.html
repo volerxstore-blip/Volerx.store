@@ -6,12 +6,12 @@
 
 <style>
 :root{
-  --black:#111;
-  --white:#ffffff;
+  --bg:#f7f7f7;
+  --card:#ffffff;
+  --light:#fdf6e9;
   --gold:#c9a24d;
   --blue:#0a1f44;
-  --bg:#fafafa;
-  --card:#ffffff;
+  --black:#111;
 }
 
 *{box-sizing:border-box}
@@ -25,7 +25,7 @@ body{
 
 /* ===== Banner ===== */
 .banner{
-  height:190px;
+  height:180px;
   background:
     linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
     url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png")
@@ -39,14 +39,13 @@ body{
 
 .banner h1{
   margin:0;
-  font-size:38px;
-  letter-spacing:3px;
+  font-size:36px;
 }
 
 .brand-line{
-  width:100px;
+  width:90px;
   height:3px;
-  margin-top:14px;
+  margin-top:10px;
   background:linear-gradient(to right,var(--gold),var(--blue));
   border-radius:10px;
 }
@@ -54,76 +53,42 @@ body{
 /* ===== Loader ===== */
 #loader{
   text-align:center;
-  padding:50px;
-  font-size:18px;
+  padding:40px;
 }
 
 /* ===== Grid ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-  gap:18px;
-  padding:20px;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:16px;
+  padding:16px;
 }
 
-/* ===== Card ===== */
+/* ===== Cards ===== */
 .card{
   background:var(--card);
-  border-radius:16px;
+  border-radius:14px;
   overflow:hidden;
-  box-shadow:0 6px 16px rgba(0,0,0,.08);
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+}
+
+/* ===== Category Card (فاتح بوضوح) ===== */
+.category{
+  background:var(--light);
+  border:1px solid rgba(201,162,77,.4);
   cursor:pointer;
-  transition:.3s;
 }
 
-.card:hover{
-  transform:translateY(-6px);
-}
-
-/* ===== Categories ===== */
-#categories .card{
-  background:linear-gradient(to bottom,#fff,#fdfbf6);
-  border:1px solid rgba(201,162,77,.25);
-}
-
-/* ===== Slider ===== */
-.slider{
-  position:relative;
-  height:160px;
-  overflow:hidden;
-}
-
-.slider img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  opacity:0;
-  animation:fade 9s infinite;
-}
-
-.slider img:nth-child(1){animation-delay:0s}
-.slider img:nth-child(2){animation-delay:3s}
-.slider img:nth-child(3){animation-delay:6s}
-
-@keyframes fade{
-  0%{opacity:0}
-  10%{opacity:1}
-  30%{opacity:1}
-  40%{opacity:0}
-  100%{opacity:0}
-}
-
-/* ===== Product ===== */
+/* ===== Images ===== */
 .card img{
   width:100%;
-  height:190px;
+  height:160px;
   object-fit:cover;
 }
 
+/* ===== Info ===== */
 .info{
-  padding:14px;
+  padding:12px;
   text-align:center;
 }
 
@@ -132,20 +97,21 @@ body{
   font-size:15px;
 }
 
+/* ===== Product ===== */
 .price{
-  margin-top:6px;
   color:var(--gold);
   font-weight:bold;
+  margin-top:6px;
 }
 
 .btn{
   display:block;
-  margin-top:12px;
-  padding:9px;
+  margin-top:10px;
+  padding:8px;
   background:var(--blue);
   color:white;
   text-decoration:none;
-  border-radius:10px;
+  border-radius:8px;
   font-size:14px;
 }
 
@@ -160,7 +126,6 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:999;
 }
 
 #lightbox img{
@@ -196,33 +161,24 @@ const lightbox = document.getElementById("lightbox");
 const bigImg = document.getElementById("bigImg");
 
 let products = [];
-let categories = {};
 
-/* ===== Fetch & Prepare ===== */
+/* ===== Fetch ===== */
 fetch(SHEET_URL)
 .then(res => res.text())
 .then(text => {
-  const rows = text.trim().split("\n").map(r => r.split(","));
+  const rows = text.trim().split("\n").map(r=>r.split(","));
   const headers = rows.shift();
 
   rows.forEach(r=>{
     let p = {};
     headers.forEach((h,i)=>p[h.trim()] = r[i]);
-    if(!p["اسم المنتج"]) return;
-
-    products.push(p);
-
-    const cat = p["القسم"].trim();
-    if(!categories[cat]) categories[cat] = [];
-    categories[cat].push(p);
+    if(p["اسم المنتج"]) products.push(p);
   });
 
   loader.classList.add("hidden");
   renderCategories();
 })
-.catch(()=>{
-  loader.innerText="❌ فشل تحميل البيانات";
-});
+.catch(()=> loader.innerText="❌ فشل تحميل البيانات");
 
 /* ===== Render Categories ===== */
 function renderCategories(){
@@ -230,47 +186,53 @@ function renderCategories(){
   categoriesEl.classList.remove("hidden");
   productsEl.classList.add("hidden");
 
-  Object.keys(categories).forEach(cat=>{
-    const imgs = categories[cat].slice(0,3).map(p=>p["رابط الصورة"]);
+  const cats = [...new Set(products.map(p=>p["القسم"].trim()))];
 
-    const card = document.createElement("div");
-    card.className = "card";
-    card.onclick = ()=> openCategory(cat);
+  cats.forEach(cat=>{
+    const firstImg = products.find(p=>p["القسم"]===cat)?.["رابط الصورة"];
 
-    card.innerHTML = `
-      <div class="slider">
-        ${imgs.map(i=>`<img src="${i}">`).join("")}
-      </div>
+    const div = document.createElement("div");
+    div.className = "card category";
+    div.dataset.category = cat;
+
+    div.innerHTML = `
+      <img src="${firstImg}">
       <div class="info"><h3>${cat}</h3></div>
     `;
 
-    categoriesEl.appendChild(card);
+    div.addEventListener("click", ()=>{
+      openCategory(div.dataset.category);
+    });
+
+    categoriesEl.appendChild(div);
   });
 }
 
-/* ===== Open Category ===== */
+/* ===== Open Category (مضمون) ===== */
 function openCategory(cat){
   productsEl.innerHTML="";
   categoriesEl.classList.add("hidden");
   productsEl.classList.remove("hidden");
 
-  categories[cat].forEach(p=>{
-    const div = document.createElement("div");
-    div.className = "card";
-    div.innerHTML = `
-      <img src="${p["رابط الصورة"]}">
-      <div class="info">
-        <h3>${p["اسم المنتج"]}</h3>
-        <div class="price">${p["السعر"]} ₪</div>
-        <a class="btn" target="_blank"
-           href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
-           طلب عبر واتساب
-        </a>
-      </div>
-    `;
-    div.querySelector("img").onclick = ()=> openImg(p["رابط الصورة"]);
-    productsEl.appendChild(div);
-  });
+  products
+    .filter(p=>p["القسم"].trim()===cat)
+    .forEach(p=>{
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <img src="${p["رابط الصورة"]}">
+        <div class="info">
+          <h3>${p["اسم المنتج"]}</h3>
+          <div class="price">${p["السعر"]} ₪</div>
+          <a class="btn" target="_blank"
+             href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
+             طلب عبر واتساب
+          </a>
+        </div>
+      `;
+      div.querySelector("img").onclick = ()=> openImg(p["رابط الصورة"]);
+      productsEl.appendChild(div);
+    });
 }
 
 /* ===== Lightbox ===== */
@@ -286,4 +248,3 @@ bigImg.onclick = e => e.stopPropagation();
 
 </body>
 </html>
-
