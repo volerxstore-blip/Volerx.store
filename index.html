@@ -2,345 +2,155 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>متجري</title>
-
+<title>المتجر</title>
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
+body{
+  font-family: Arial;
+  margin:0;
+  background:#f5f5f5;
 }
-
-/* ===== HEADER ===== */
-header {
-  background: #0d6efd;
-  color: #fff;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+header{
+  background:#111;
+  color:white;
+  padding:10px;
+  display:flex;
+  justify-content:space-between;
 }
-
-#backBtn {
-  display: none;
-  background: #fff;
-  color: #0d6efd;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
+button{
+  padding:8px 12px;
+  cursor:pointer;
 }
-
-/* ===== CONTAINER ===== */
-.container {
-  padding: 15px;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:15px;
+  padding:15px;
 }
-
-/* ===== GRID ===== */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 15px;
+.card{
+  background:white;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
-
-/* ===== CARD ===== */
-.card {
-  background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  text-align: center;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+.card img{
+  width:100%;
+  height:160px;
+  object-fit:cover;
 }
-
-/* ===== IMAGE BOX ===== */
-.image-box {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
+.card .info{
+  padding:10px;
 }
-
-.image-box img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* ===== TEXT ===== */
-.card h3 {
-  margin: 10px;
-  font-size: 16px;
-}
-
-.price {
-  color: green;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-/* ===== CATEGORY TITLE ===== */
-.category-title {
-  grid-column: 1 / -1;
-  margin: 25px 0 10px;
-  font-size: 20px;
-  color: #0d6efd;
-}
-
-/* ===== LIGHTBOX ===== */
-#lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-#lightbox img {
-  max-width: 90%;
-  max-height: 90%;
-}
-
-#closeLightbox {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #fff;
-  border: none;
-  font-size: 20px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-/* ===== LOADING ===== */
-#loading {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-}
-
-/* ===== BOTTOM BUTTONS ===== */
-#bottomButtons {
-  display: flex;
-  justify-content: space-around;
-  margin: 15px 0;
-  flex-wrap: wrap;
-}
-
-.bottomBtn {
-  padding: 10px 20px;
-  background: #0d6efd;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 5px;
-}
-.bottomBtn span {
-  background: #ff0000;
-  border-radius: 50%;
-  padding: 2px 6px;
-  margin-left: 5px;
-  font-size: 14px;
-}
-
-/* ===== CART INPUT ====== */
-.cart input[type="number"] {
-  width: 50px;
-  margin-left: 5px;
-}
-.cart button {
-  margin-left: 5px;
+.hidden{display:none}
+.badge{
+  background:red;
+  color:white;
+  border-radius:50%;
+  padding:2px 7px;
+  font-size:12px;
 }
 </style>
 </head>
-
 <body>
 
 <header>
-  <h2 id="title">الأقسام</h2>
-  <button id="backBtn" onclick="showCategories()">رجوع ←</button>
+  <button onclick="showHome()">الأقسام</button>
+  <button onclick="showCart()">السلة <span id="cartCount" class="badge">0</span></button>
 </header>
 
-<div class="container">
-  <div id="loading">⏳ جاري تحميل المنتجات...</div>
-  <div id="categories" class="grid"></div>
-  <div id="products" class="grid" style="display:none;"></div>
-
-  <!-- أسفل الموقع: الأزرار -->
-  <div id="bottomButtons">
-    <button class="bottomBtn" onclick="showCategories()">الأقسام</button>
-    <button class="bottomBtn" onclick="showCart()">السلة <span id="cartCount">0</span></button>
-  </div>
-
-  <!-- قائمة السلة -->
-  <div id="cartContainer" style="display:none; margin-top:10px;">
-    <ul id="cartList"></ul>
-  </div>
-</div>
-
-<!-- Lightbox -->
-<div id="lightbox" onclick="closeLightbox()">
-  <button id="closeLightbox">✕</button>
-  <img id="lightboxImg">
-</div>
+<div id="home" class="grid"></div>
+<div id="products" class="grid hidden"></div>
+<div id="cart" class="hidden"></div>
 
 <script>
-// ====== المتغيرات ======
-const categoriesContainer = document.getElementById("categories");
-const productsContainer = document.getElementById("products");
-const loading = document.getElementById("loading");
-const cartCount = document.getElementById("cartCount");
-const cartList = document.getElementById("cartList");
-const cartContainer = document.getElementById("cartContainer");
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqT2v2xDzY2wm6VlqIYXWZ9QbnrdJmTIwR9Yn3v8OJIQ1VWIIBZyWK8eE-gEj50qkfyeEvi9De9LW8/pub?gid=2004862592&single=true&output=csv";
+let products=[],cart=[];
+let currentCategory="";
 
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQY3NsJAn1x4wBXXAQnEkZ5ynSfCSMfU0NpBQhDtMPKOdjfYhduKX8ow3W0wSWd34oz6n75XlvuWh0W/pub?gid=1489177387&single=true&output=csv"; // ضع هنا رابط Google Sheet بصيغة CSV
-
-let categoriesData = {};
-let cart = {};
-
-// ====== تحميل البيانات ======
 fetch(SHEET_URL)
-  .then(res => res.text())
-  .then(data => {
-    loading.style.display = "none";
-    const rows = data.split("\n").slice(1);
-
-    // قراءة الأعمدة حسب الاسم (بدون ترتيب)
-    const header = data.split("\n")[0].split(",");
-    const nameIndex = header.indexOf("اسم المنتج");
-    const priceIndex = header.indexOf("السعر");
-    const imageIndex = header.indexOf("رابط الصورة");
-    const categoryIndex = header.indexOf("القسم");
-
-    rows.forEach(row => {
-      if(!row.trim()) return;
-      const cols = row.split(",");
-      const name = cols[nameIndex]?.trim();
-      const price = cols[priceIndex]?.trim();
-      const image = cols[imageIndex]?.trim();
-      const category = cols[categoryIndex]?.trim();
-      if(!name || !price || !image || !category) return;
-
-      if(!categoriesData[category]) categoriesData[category] = [];
-      categoriesData[category].push({name, price, image});
-    });
-
-    renderCategories();
-  })
-  .catch(err => {
-    loading.innerText = "❌ فشل تحميل البيانات، تحقق من الرابط";
-    console.error(err);
+.then(r=>r.text())
+.then(csv=>{
+  const rows=csv.split("\n").map(r=>r.split(","));
+  const headers=rows[0];
+  rows.slice(1).forEach(r=>{
+    let p={};
+    headers.forEach((h,i)=>p[h.trim()]=r[i]);
+    products.push(p);
   });
+  renderCategories();
+});
 
-// ====== الدوال ======
-function renderCategories() {
-  categoriesContainer.innerHTML = "";
-  Object.keys(categoriesData).slice(0,3).forEach(cat => {
-    const firstProduct = categoriesData[cat][0];
-    categoriesContainer.innerHTML += `
-      <div class="card" onclick="openCategory('${cat}')">
-        <div class="image-box">
-          <img src="${firstProduct.image}">
-        </div>
-        <h3>${cat}</h3>
+function renderCategories(){
+  home.innerHTML="";
+  const cats=[...new Set(products.map(p=>p["القسم"]))];
+  cats.forEach(c=>{
+    const prod=products.find(p=>p["القسم"]===c);
+    home.innerHTML+=`
+      <div class="card" onclick="openCategory('${c}')">
+        <img src="${prod["رابط الصورة"]}">
+        <div class="info"><b>${c}</b></div>
+      </div>`;
+  });
+}
+
+function openCategory(cat){
+  currentCategory=cat;
+  home.classList.add("hidden");
+  productsDiv.classList.remove("hidden");
+  productsDiv.innerHTML="";
+  products.filter(p=>p["القسم"]===cat).forEach(p=>{
+    productsDiv.innerHTML+=`
+    <div class="card">
+      <img src="${p["رابط الصورة"]}">
+      <div class="info">
+        <b>${p["اسم المنتج"]}</b><br>
+        ${p["السعر"]} ₪<br>
+        <input type="number" min="1" value="1" id="q${p["اسم المنتج"]}">
+        <button onclick="addToCart('${p["اسم المنتج"]}',${p["السعر"]},'${p["رابط الصورة"]}')">
+          أضف للسلة
+        </button>
       </div>
-    `;
+    </div>`;
   });
 }
 
-function openCategory(cat) {
-  document.getElementById("title").innerText = cat;
-  document.getElementById("backBtn").style.display = "block";
-  categoriesContainer.style.display = "none";
-  productsContainer.style.display = "grid";
-  cartContainer.style.display = "none";
-  productsContainer.innerHTML = "";
+function addToCart(name,price,img){
+  const q=document.getElementById("q"+name).value;
+  cart.push({name,price,img,q});
+  updateCartCount();
+}
 
-  categoriesData[cat].forEach(p => {
-    productsContainer.innerHTML += `
-      <div class="card">
-        <div class="image-box" onclick="openLightbox('${p.image}')">
-          <img src="${p.image}" loading="lazy">
-        </div>
-        <h3>${p.name}</h3>
-        <div class="price">${p.price} ₪</div>
-        <input type="number" min="1" value="1" id="qty-${p.name.replace(/\s/g,'')}">
-        <button onclick="addToCart('${p.name}','${p.price}','${p.image}')">أضف إلى السلة</button>
+function updateCartCount(){
+  cartCount.innerText=cart.reduce((a,b)=>a+Number(b.q),0);
+}
+
+function showCart(){
+  home.classList.add("hidden");
+  productsDiv.classList.add("hidden");
+  cartDiv.classList.remove("hidden");
+  cartDiv.innerHTML="<h2>السلة</h2>";
+  cart.forEach((c,i)=>{
+    cartDiv.innerHTML+=`
+    <div class="card">
+      <img src="${c.img}">
+      <div class="info">
+        ${c.name}<br>
+        ${c.price} ₪ × ${c.q}
+        <button onclick="removeItem(${i})">حذف</button>
       </div>
-    `;
+    </div>`;
   });
 }
 
-function showCategories() {
-  document.getElementById("title").innerText = "الأقسام";
-  document.getElementById("backBtn").style.display = "none";
-  productsContainer.style.display = "none";
-  cartContainer.style.display = "none";
-  categoriesContainer.style.display = "grid";
-}
-
-// ===== LIGHTBOX =====
-function openLightbox(src) {
-  document.getElementById("lightboxImg").src = src;
-  document.getElementById("lightbox").style.display = "flex";
-}
-function closeLightbox() { document.getElementById("lightbox").style.display = "none"; }
-
-// ===== CART =====
-function addToCart(name, price, image) {
-  const qtyInput = document.getElementById(qty-${name.replace(/\s/g,'')});
-  const qty = parseInt(qtyInput?.value) || 1;
-
-  if(cart[name]) {
-    cart[name].qty += qty;
-  } else {
-    cart[name] = {price: parseFloat(price), image, qty};
-  }
-  renderCart();
+function removeItem(i){
+  cart.splice(i,1);
+  showCart();
   updateCartCount();
 }
 
-function renderCart() {
-  cartList.innerHTML = "";
-  Object.keys(cart).forEach(key => {
-    const item = cart[key];
-    cartList.innerHTML += `
-      <li class="cart">
-        <img src="${item.image}" width="30" height="30">
-        ${key} - ${item.price} ₪
-        <input type="number" min="1" value="${item.qty}" onchange="updateQty('${key}', this.value)">
-        <button onclick="removeFromCart('${key}')">❌</button>
-      </li>
-    `;
-  });
-}
-
-function updateQty(name, val) {
-  cart[name].qty = parseInt(val) || 1;
-  renderCart();
-  updateCartCount();
-}
-
-function removeFromCart(name) {
-  delete cart[name];
-  renderCart();
-  updateCartCount();
-}
-
-function updateCartCount() {
-  const total = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
-  cartCount.innerText = total;
-}
-
-function showCart() {
-  document.getElementById("title").innerText = "السلة";
-  categoriesContainer.style.display = "none";
-  productsContainer.style.display = "none";
-  cartContainer.style.display = "block";
-  document.getElementById("backBtn").style.display = "block";
+function showHome(){
+  cartDiv.classList.add("hidden");
+  productsDiv.classList.add("hidden");
+  home.classList.remove("hidden");
 }
 </script>
 
