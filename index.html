@@ -5,15 +5,15 @@
 <title>Volerx | زينة رمضان</title>
 
 <style>
-/* ===== Root Colors ===== */
 :root{
   --black:#111;
   --white:#fff;
   --gold:#c9a24d;
   --blue:#0a1f44;
-  --bg:#f5f5f5;
+  --bg:#f2f2f2;
 }
 
+/* ===== Reset ===== */
 *{box-sizing:border-box}
 
 body{
@@ -40,14 +40,16 @@ body{
 
 .banner h1{
   margin:0;
-  font-size:32px;
+  font-size:34px;
   letter-spacing:2px;
 }
 
-.banner p{
-  margin-top:8px;
-  color:var(--gold);
-  font-size:16px;
+.brand-line{
+  width:90px;
+  height:3px;
+  background:linear-gradient(to right,var(--gold),var(--blue));
+  margin-top:12px;
+  border-radius:10px;
 }
 
 /* ===== Loader ===== */
@@ -65,6 +67,7 @@ body{
   padding:16px;
 }
 
+/* ===== Cards ===== */
 .card{
   background:var(--white);
   border-radius:14px;
@@ -77,7 +80,14 @@ body{
   transform:translateY(-4px);
 }
 
-/* ===== Category Slider ===== */
+/* ===== Categories Style ===== */
+#categories .card{
+  background:linear-gradient(to bottom,#fff,#faf7f0);
+  border:1px solid rgba(201,162,77,.25);
+  cursor:pointer;
+}
+
+/* ===== Slider ===== */
 .slider{
   position:relative;
   height:160px;
@@ -136,18 +146,14 @@ body{
   display:block;
   margin-top:8px;
   padding:8px;
-  background:var(--black);
+  background:var(--blue);
   color:white;
   text-decoration:none;
   border-radius:8px;
   font-size:14px;
 }
 
-.btn-wa{
-  background:var(--blue);
-}
-
-/* ===== Hidden ===== */
+/* ===== Utility ===== */
 .hidden{display:none}
 
 /* ===== Lightbox ===== */
@@ -165,15 +171,6 @@ body{
   max-width:90%;
   max-height:90%;
 }
-
-#close{
-  position:absolute;
-  top:20px;
-  left:20px;
-  font-size:32px;
-  color:white;
-  cursor:pointer;
-}
 </style>
 </head>
 
@@ -182,7 +179,7 @@ body{
 <!-- ===== Banner ===== -->
 <div class="banner">
   <h1>Volerx</h1>
-  <p>زينة رمضان | فوانيس | لافتات</p>
+  <div class="brand-line"></div>
 </div>
 
 <div id="loader">⏳ جاري تحميل المنتجات...</div>
@@ -191,8 +188,7 @@ body{
 <div id="products" class="grid hidden"></div>
 
 <!-- ===== Lightbox ===== -->
-<div id="lightbox" class="hidden">
-  <span id="close" onclick="closeImg()">✕</span>
+<div id="lightbox" class="hidden" onclick="closeImg()">
   <img id="bigImg">
 </div>
 
@@ -200,7 +196,7 @@ body{
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
 let data=[];
 
-/* ===== Fetch Products ===== */
+/* ===== Fetch Data ===== */
 fetch(SHEET_URL)
 .then(r=>r.text())
 .then(text=>{
@@ -221,19 +217,22 @@ fetch(SHEET_URL)
   loader.innerText="❌ فشل تحميل البيانات";
 });
 
-/* ===== Categories ===== */
+/* ===== Show Categories ===== */
 function showCategories(){
   history.pushState({page:"cats"},"","");
   categories.innerHTML="";
   products.classList.add("hidden");
   categories.classList.remove("hidden");
 
-  const cats=[...new Set(data.map(p=>p["القسم"]))];
+  const cats=[...new Set(
+    data.map(p=>p["القسم"]?.trim()).filter(Boolean)
+  )];
 
   cats.forEach(cat=>{
-    const imgs=data.filter(p=>p["القسم"]===cat)
-                   .map(p=>p["رابط الصورة"])
-                   .slice(0,3);
+    const imgs=data
+      .filter(p=>p["القسم"]===cat)
+      .map(p=>p["رابط الصورة"])
+      .slice(0,3);
 
     categories.innerHTML+=`
       <div class="card" onclick="openCategory('${cat}')">
@@ -248,9 +247,9 @@ function showCategories(){
   });
 }
 
-/* ===== Products ===== */
+/* ===== Open Category ===== */
 function openCategory(cat){
-  history.pushState({page:"products"},"","");
+  history.pushState({page:"products",cat},"","");
   products.innerHTML="";
   categories.classList.add("hidden");
   products.classList.remove("hidden");
@@ -262,8 +261,8 @@ function openCategory(cat){
         <div class="info">
           <h3>${p["اسم المنتج"]}</h3>
           <div class="price">${p["السعر"]} ₪</div>
-          <a class="btn btn-wa" target="_blank"
-             href="https://wa.me/XXXXXXXXXX?text=السلام عليكم، أرغب بشراء ${p["اسم المنتج"]}">
+          <a class="btn" target="_blank"
+             href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
              طلب عبر واتساب
           </a>
         </div>
@@ -282,6 +281,8 @@ function closeImg(){
   lightbox.classList.add("hidden");
 }
 
+bigImg.onclick = e => e.stopPropagation();
+
 /* ===== Back Button ===== */
 window.onpopstate=()=>{
   showCategories();
@@ -290,4 +291,5 @@ window.onpopstate=()=>{
 
 </body>
 </html>
+
 
