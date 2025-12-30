@@ -5,13 +5,17 @@
 <title>متجري</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- خط عربي -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Cairo', sans-serif;
   background: #f5f5f5;
 }
 
+/* ===== Header ===== */
 header {
   background: #0d6efd;
   color: white;
@@ -20,33 +24,51 @@ header {
   font-size: 22px;
 }
 
+/* ===== Loading ===== */
+#loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+/* ===== Products Grid ===== */
 .products {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 15px;
   padding: 15px;
 }
 
+/* ===== Product Card ===== */
 .product {
   background: white;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
 }
 
-.product img {
+/* ===== Image Container ===== */
+.image-box {
   width: 100%;
-  height: 200px; /* كبرنا ارتفاع الصورة */
-  object-fit: cover; /* يظهر الصورة كاملة بدون قص */
-  object-position: center;
-  border-radius: 8px;
-  background: #f5f5f5;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eee;
+  cursor: pointer;
 }
 
+.image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ===== Text ===== */
 .product h3 {
-  margin: 8px 0 5px;
   font-size: 16px;
+  margin: 8px 0 5px;
 }
 
 .price {
@@ -55,14 +77,41 @@ header {
   margin-bottom: 8px;
 }
 
+/* ===== Button ===== */
 .buy {
+  margin-top: auto;
   background: #198754;
   color: white;
   border: none;
   padding: 10px;
-  width: 100%;
   border-radius: 8px;
   font-size: 15px;
+  cursor: pointer;
+}
+
+/* ===== Modal (Lightbox) ===== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 10px;
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  color: white;
   cursor: pointer;
 }
 </style>
@@ -70,38 +119,59 @@ header {
 
 <body>
 
-<header>
-🛒 متجر سلع رمضان
-</header>
+<header>🛒 متجر سلع</header>
 
+<div id="loading">⏳ جاري تحميل المنتجات...</div>
 <div class="products" id="products"></div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <span class="close" onclick="closeModal()">✕</span>
+  <img id="modalImage">
+</div>
 
 <script>
 const container = document.getElementById("products");
+const loading = document.getElementById("loading");
 
-// رابط CSV الخاص بالـ Google Sheet (ضع الرابط الخاص بك هنا)
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQY3NsJAn1x4wBXXAQnEkZ5ynSfCSMfU0NpBQhDtMPKOdjfYhduKX8ow3W0wSWd34oz6n75XlvuWh0W/pub?gid=1489177387&single=true&output=csv";
+// 🔴 غيّر هذا الرابط فقط
+const SHEET_CSV_URL =
+"https://docs.google.com/spreadsheets/d/ID_الخاصة_بك/export?format=csv";
 
 fetch(SHEET_CSV_URL)
-  .then(response => response.text())
+  .then(res => res.text())
   .then(data => {
-    const rows = data.split("\n").slice(1); // نتخطى العنوان
+    loading.style.display = "none";
+    const rows = data.split("\n").slice(1);
+
     rows.forEach(row => {
-      if(!row) return; // تجاهل الصف الفارغ
-      const [timestamp, name, price, image] = row.split(",");
-      if(!name || !price || !image) return; // تجاهل الصفوف الناقصة
+      if(!row) return;
+
+      const [t, name, price, image] = row.split(",");
+      if(!name || !price || !image) return;
 
       container.innerHTML += `
         <div class="product">
-          <img src="${image}" alt="${name}">
+          <div class="image-box" onclick="openModal('${image}')">
+            <img src="${image}" loading="lazy">
+          </div>
           <h3>${name}</h3>
           <div class="price">${price}</div>
           <button class="buy">اطلب الآن</button>
         </div>
       `;
     });
-  })
-  .catch(error => console.error("خطأ في قراءة البيانات:", error));
+  });
+
+// ===== Modal Functions =====
+function openModal(src) {
+  document.getElementById("modalImage").src = src;
+  document.getElementById("modal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("modal").style.display = "none";
+}
 </script>
 
 </body>
