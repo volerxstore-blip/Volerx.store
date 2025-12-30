@@ -7,10 +7,11 @@
 <style>
 :root{
   --black:#111;
-  --white:#fff;
+  --white:#ffffff;
   --gold:#c9a24d;
   --blue:#0a1f44;
-  --bg:#f2f2f2;
+  --bg:#fafafa;
+  --card:#ffffff;
 }
 
 *{box-sizing:border-box}
@@ -24,9 +25,9 @@ body{
 
 /* ===== Banner ===== */
 .banner{
-  height:180px;
+  height:190px;
   background:
-    linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),
+    linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
     url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png")
     center/cover no-repeat;
   display:flex;
@@ -38,14 +39,14 @@ body{
 
 .banner h1{
   margin:0;
-  font-size:36px;
-  letter-spacing:2px;
+  font-size:38px;
+  letter-spacing:3px;
 }
 
 .brand-line{
-  width:90px;
+  width:100px;
   height:3px;
-  margin-top:12px;
+  margin-top:14px;
   background:linear-gradient(to right,var(--gold),var(--blue));
   border-radius:10px;
 }
@@ -53,30 +54,35 @@ body{
 /* ===== Loader ===== */
 #loader{
   text-align:center;
-  padding:40px;
+  padding:50px;
   font-size:18px;
 }
 
 /* ===== Grid ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-  gap:16px;
-  padding:16px;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:18px;
+  padding:20px;
 }
 
 /* ===== Card ===== */
 .card{
-  background:var(--white);
-  border-radius:14px;
+  background:var(--card);
+  border-radius:16px;
   overflow:hidden;
-  box-shadow:0 4px 10px rgba(0,0,0,.12);
+  box-shadow:0 6px 16px rgba(0,0,0,.08);
   cursor:pointer;
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-6px);
 }
 
 /* ===== Categories ===== */
 #categories .card{
-  background:linear-gradient(to bottom,#fff,#faf7f0);
+  background:linear-gradient(to bottom,#fff,#fdfbf6);
   border:1px solid rgba(201,162,77,.25);
 }
 
@@ -112,12 +118,12 @@ body{
 /* ===== Product ===== */
 .card img{
   width:100%;
-  height:180px;
+  height:190px;
   object-fit:cover;
 }
 
 .info{
-  padding:12px;
+  padding:14px;
   text-align:center;
 }
 
@@ -134,12 +140,12 @@ body{
 
 .btn{
   display:block;
-  margin-top:10px;
-  padding:8px;
+  margin-top:12px;
+  padding:9px;
   background:var(--blue);
   color:white;
   text-decoration:none;
-  border-radius:8px;
+  border-radius:10px;
   font-size:14px;
 }
 
@@ -184,81 +190,86 @@ body{
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
 
 const loader = document.getElementById("loader");
-const categories = document.getElementById("categories");
-const products = document.getElementById("products");
+const categoriesEl = document.getElementById("categories");
+const productsEl = document.getElementById("products");
 const lightbox = document.getElementById("lightbox");
 const bigImg = document.getElementById("bigImg");
 
-let data = [];
+let products = [];
+let categories = {};
 
-/* ===== Fetch ===== */
+/* ===== Fetch & Prepare ===== */
 fetch(SHEET_URL)
 .then(res => res.text())
 .then(text => {
-  const lines = text.trim().split("\n");
-  const headers = lines[0].split(",");
+  const rows = text.trim().split("\n").map(r => r.split(","));
+  const headers = rows.shift();
 
-  for(let i=1;i<lines.length;i++){
-    const row = lines[i].split(",");
-    let obj = {};
-    headers.forEach((h,idx)=>obj[h.trim()] = row[idx]);
-    if(obj["اسم المنتج"]) data.push(obj);
-  }
+  rows.forEach(r=>{
+    let p = {};
+    headers.forEach((h,i)=>p[h.trim()] = r[i]);
+    if(!p["اسم المنتج"]) return;
+
+    products.push(p);
+
+    const cat = p["القسم"].trim();
+    if(!categories[cat]) categories[cat] = [];
+    categories[cat].push(p);
+  });
 
   loader.classList.add("hidden");
-  showCategories();
+  renderCategories();
 })
 .catch(()=>{
-  loader.innerText = "❌ فشل تحميل البيانات";
+  loader.innerText="❌ فشل تحميل البيانات";
 });
 
-/* ===== Categories ===== */
-function showCategories(){
-  categories.innerHTML="";
-  categories.classList.remove("hidden");
-  products.classList.add("hidden");
+/* ===== Render Categories ===== */
+function renderCategories(){
+  categoriesEl.innerHTML="";
+  categoriesEl.classList.remove("hidden");
+  productsEl.classList.add("hidden");
 
-  const cats = [...new Set(
-    data.map(p => p["القسم"]?.trim()).filter(Boolean)
-  )];
+  Object.keys(categories).forEach(cat=>{
+    const imgs = categories[cat].slice(0,3).map(p=>p["رابط الصورة"]);
 
-  cats.forEach(cat=>{
-    const imgs = data
-      .filter(p=>p["القسم"]===cat)
-      .map(p=>p["رابط الصورة"])
-      .slice(0,3);
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = ()=> openCategory(cat);
 
-    categories.innerHTML += `
-      <div class="card" onclick="openCategory('${cat}')">
-        <div class="slider">
-          ${imgs.map(i=>`<img src="${i}">`).join("")}
-        </div>
-        <div class="info"><h3>${cat}</h3></div>
+    card.innerHTML = `
+      <div class="slider">
+        ${imgs.map(i=>`<img src="${i}">`).join("")}
       </div>
+      <div class="info"><h3>${cat}</h3></div>
     `;
+
+    categoriesEl.appendChild(card);
   });
 }
 
-/* ===== Products ===== */
+/* ===== Open Category ===== */
 function openCategory(cat){
-  products.innerHTML="";
-  categories.classList.add("hidden");
-  products.classList.remove("hidden");
+  productsEl.innerHTML="";
+  categoriesEl.classList.add("hidden");
+  productsEl.classList.remove("hidden");
 
-  data.filter(p=>p["القسم"]===cat).forEach(p=>{
-    products.innerHTML += `
-      <div class="card">
-        <img src="${p["رابط الصورة"]}" onclick="openImg('${p["رابط الصورة"]}')">
-        <div class="info">
-          <h3>${p["اسم المنتج"]}</h3>
-          <div class="price">${p["السعر"]} ₪</div>
-          <a class="btn" target="_blank"
-             href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
-             طلب عبر واتساب
-          </a>
-        </div>
+  categories[cat].forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <img src="${p["رابط الصورة"]}">
+      <div class="info">
+        <h3>${p["اسم المنتج"]}</h3>
+        <div class="price">${p["السعر"]} ₪</div>
+        <a class="btn" target="_blank"
+           href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
+           طلب عبر واتساب
+        </a>
       </div>
     `;
+    div.querySelector("img").onclick = ()=> openImg(p["رابط الصورة"]);
+    productsEl.appendChild(div);
   });
 }
 
@@ -275,3 +286,4 @@ bigImg.onclick = e => e.stopPropagation();
 
 </body>
 </html>
+
