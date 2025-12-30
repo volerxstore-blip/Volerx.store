@@ -3,154 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <title>المتجر</title>
+
 <style>
 body{
-  font-family: Arial;
   margin:0;
-  background:#f5f5f5;
+  font-family:Arial;
+  background:#f4f4f4;
+  padding-bottom:70px;
 }
-header{
-  background:#111;
-  color:white;
-  padding:10px;
-  display:flex;
-  justify-content:space-between;
-}
-button{
-  padding:8px 12px;
-  cursor:pointer;
+.loader{
+  text-align:center;
+  margin-top:40px;
+  font-size:18px;
 }
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
   gap:15px;
   padding:15px;
 }
 .card{
-  background:white;
-  border-radius:10px;
+  background:#fff;
+  border-radius:12px;
   overflow:hidden;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
 }
 .card img{
   width:100%;
   height:160px;
   object-fit:cover;
 }
-.card .info{
+.info{
   padding:10px;
+  text-align:center;
 }
 .hidden{display:none}
+
+/* Bottom Bar */
+.bottom-bar{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:#111;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+}
+.bottom-bar button{
+  background:none;
+  color:white;
+  border:none;
+  font-size:16px;
+  position:relative;
+}
 .badge{
+  position:absolute;
+  top:-5px;
+  right:-10px;
   background:red;
   color:white;
   border-radius:50%;
-  padding:2px 7px;
   font-size:12px;
+  padding:2px 6px;
+}
+
+/* Slider */
+.slider{
+  height:160px;
+  overflow:hidden;
+}
+.slider img{
+  animation:slide 6s infinite;
+}
+@keyframes slide{
+  0%{transform:translateY(0)}
+  33%{transform:translateY(-160px)}
+  66%{transform:translateY(-320px)}
+  100%{transform:translateY(0)}
 }
 </style>
 </head>
+
 <body>
 
-<header>
-  <button onclick="showHome()">الأقسام</button>
-  <button onclick="showCart()">السلة <span id="cartCount" class="badge">0</span></button>
-</header>
+<div id="loader" class="loader">⏳ جاري تحميل المنتجات...</div>
 
-<div id="home" class="grid"></div>
+<div id="categories" class="grid hidden"></div>
 <div id="products" class="grid hidden"></div>
-<div id="cart" class="hidden"></div>
+<div id="cart" class="grid hidden"></div>
+
+<div class="bottom-bar">
+  <button onclick="showCart()">
+    السلة
+    <span id="cartCount" class="badge">0</span>
+  </button>
+  <button onclick="showCategories()">الأقسام</button>
+</div>
 
 <script>
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTqT2v2xDzY2wm6VlqIYXWZ9QbnrdJmTIwR9Yn3v8OJIQ1VWIIBZyWK8eE-gEj50qkfyeEvi9De9LW8/pub?gid=2004862592&single=true&output=csv";
-let products=[],cart=[];
-let currentCategory="";
+
+let allProducts=[];
+let cart=JSON.parse(localStorage.getItem("cart")) || [];
+
+updateCartCount();
 
 fetch(SHEET_URL)
 .then(r=>r.text())
 .then(csv=>{
   const rows=csv.split("\n").map(r=>r.split(","));
-  const headers=rows[0];
+  const headers=rows[0].map(h=>h.trim());
   rows.slice(1).forEach(r=>{
-    let p={};
-    headers.forEach((h,i)=>p[h.trim()]=r[i]);
-    products.push(p);
+    let obj={};
+    headers.forEach((h,i)=>obj[h]=r[i]);
+    if(obj["اسم المنتج"]) allProducts.push(obj);
   });
-  renderCategories();
+  loader.classList.add("hidden");
+  showCategories();
 });
 
-function renderCategories(){
-  home.innerHTML="";
-  const cats=[...new Set(products.map(p=>p["القسم"]))];
-  cats.forEach(c=>{
-    const prod=products.find(p=>p["القسم"]===c);
-    home.innerHTML+=`
-      <div class="card" onclick="openCategory('${c}')">
-        <img src="${prod["رابط الصورة"]}">
-        <div class="info"><b>${c}</b></div>
+function showCategories(){
+  hideAll();
+  categories.innerHTML="";
+  const cats=[...new Set(allProducts.map(p=>p["القسم"]))];
+  cats.forEach(cat=>{
+    const imgs=allProducts.filter(p=>p["القسم"]===cat).map(p=>p["رابط الصورة"]);
+    categories.innerHTML+=`
+      <div class="card" onclick="openCategory('${cat}')">
+        <div class="slider">
+          ${imgs.map(i=><img src="${i}">).join("")}
+        </div>
+        <div class="info"><b>${cat}</b></div>
       </div>`;
   });
+  categories.classList.remove("hidden");
 }
 
 function openCategory(cat){
-  currentCategory=cat;
-  home.classList.add("hidden");
-  productsDiv.classList.remove("hidden");
-  productsDiv.innerHTML="";
-  products.filter(p=>p["القسم"]===cat).forEach(p=>{
-    productsDiv.innerHTML+=`
-    <div class="card">
-      <img src="${p["رابط الصورة"]}">
-      <div class="info">
-        <b>${p["اسم المنتج"]}</b><br>
-        ${p["السعر"]} ₪<br>
-        <input type="number" min="1" value="1" id="q${p["اسم المنتج"]}">
-        <button onclick="addToCart('${p["اسم المنتج"]}',${p["السعر"]},'${p["رابط الصورة"]}')">
-          أضف للسلة
-        </button>
-      </div>
-    </div>`;
+  hideAll();
+  products.innerHTML="";
+  allProducts.filter(p=>p["القسم"]===cat).forEach(p=>{
+    products.innerHTML+=`
+      <div class="card">
+        <img src="${p["رابط الصورة"]}">
+        <div class="info">
+          <b>${p["اسم المنتج"]}</b><br>
+          ${p["السعر"]} ₪<br>
+          <input type="number" min="1" value="1" id="q_${p["اسم المنتج"]}">
+          <button onclick="addToCart('${p["اسم المنتج"]}',${p["السعر"]},'${p["رابط الصورة"]}')">
+            أضف إلى السلة
+          </button>
+        </div>
+      </div>`;
   });
+  products.classList.remove("hidden");
 }
 
 function addToCart(name,price,img){
-  const q=document.getElementById("q"+name).value;
-  cart.push({name,price,img,q});
+  const q=document.getElementById("q_"+name).value;
+  cart.push({name,price,img,q:Number(q)});
+  localStorage.setItem("cart",JSON.stringify(cart));
   updateCartCount();
-}
-
-function updateCartCount(){
-  cartCount.innerText=cart.reduce((a,b)=>a+Number(b.q),0);
 }
 
 function showCart(){
-  home.classList.add("hidden");
-  productsDiv.classList.add("hidden");
-  cartDiv.classList.remove("hidden");
-  cartDiv.innerHTML="<h2>السلة</h2>";
-  cart.forEach((c,i)=>{
+  hideAll();
+  cartDiv.innerHTML="";
+  cart.forEach(c=>{
     cartDiv.innerHTML+=`
-    <div class="card">
-      <img src="${c.img}">
-      <div class="info">
-        ${c.name}<br>
-        ${c.price} ₪ × ${c.q}
-        <button onclick="removeItem(${i})">حذف</button>
-      </div>
-    </div>`;
+      <div class="card">
+        <img src="${c.img}">
+        <div class="info">
+          ${c.name}<br>
+          ${c.price} ₪ × ${c.q}
+        </div>
+      </div>`;
   });
+  cartDiv.classList.remove("hidden");
 }
 
-function removeItem(i){
-  cart.splice(i,1);
-  showCart();
-  updateCartCount();
+function updateCartCount(){
+  cartCount.innerText=cart.reduce((a,b)=>a+b.q,0);
 }
 
-function showHome(){
+function hideAll(){
+  categories.classList.add("hidden");
+  products.classList.add("hidden");
   cartDiv.classList.add("hidden");
-  productsDiv.classList.add("hidden");
-  home.classList.remove("hidden");
 }
 </script>
 
