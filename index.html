@@ -1,28 +1,53 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>منتجاتي</title>
+<title>Volerx | زينة رمضان</title>
 
 <style>
+/* ===== Root Colors ===== */
+:root{
+  --black:#111;
+  --white:#fff;
+  --gold:#c9a24d;
+  --blue:#0a1f44;
+  --bg:#f5f5f5;
+}
+
 *{box-sizing:border-box}
+
 body{
   margin:0;
   font-family:Arial, sans-serif;
-  background:#f2f2f2;
+  background:var(--bg);
+  color:var(--black);
 }
 
 /* ===== Banner ===== */
 .banner{
-  height:160px;
-  background:url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png") center/cover no-repeat;
+  height:180px;
+  background:
+    linear-gradient(rgba(0,0,0,.6),rgba(0,0,0,.6)),
+    url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png")
+    center/cover no-repeat;
   display:flex;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
   color:white;
-  font-size:28px;
-  font-weight:bold;
-  text-shadow:0 3px 8px black;
+  text-align:center;
+}
+
+.banner h1{
+  margin:0;
+  font-size:32px;
+  letter-spacing:2px;
+}
+
+.banner p{
+  margin-top:8px;
+  color:var(--gold);
+  font-size:16px;
 }
 
 /* ===== Loader ===== */
@@ -35,45 +60,40 @@ body{
 /* ===== Grid ===== */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:15px;
-  padding:15px;
+  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
+  gap:16px;
+  padding:16px;
 }
 
 .card{
-  background:white;
-  border-radius:12px;
+  background:var(--white);
+  border-radius:14px;
   overflow:hidden;
-  box-shadow:0 2px 6px rgba(0,0,0,.15);
-  cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,.12);
+  transition:.3s;
 }
 
-.card img{
-  width:100%;
-  height:160px;
-  object-fit:cover;
+.card:hover{
+  transform:translateY(-4px);
 }
 
-.info{
-  padding:10px;
-  text-align:center;
-  font-weight:bold;
-}
-
-.hidden{display:none}
-
-/* ===== Slider ===== */
+/* ===== Category Slider ===== */
 .slider{
   position:relative;
   height:160px;
   overflow:hidden;
 }
+
 .slider img{
   position:absolute;
   inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
   opacity:0;
   animation:fade 9s infinite;
 }
+
 .slider img:nth-child(1){animation-delay:0s}
 .slider img:nth-child(2){animation-delay:3s}
 .slider img:nth-child(3){animation-delay:6s}
@@ -86,6 +106,50 @@ body{
   100%{opacity:0}
 }
 
+/* ===== Product Image ===== */
+.card img{
+  width:100%;
+  height:180px;
+  object-fit:cover;
+  cursor:pointer;
+}
+
+/* ===== Info ===== */
+.info{
+  padding:12px;
+  text-align:center;
+}
+
+.info h3{
+  margin:0;
+  font-size:15px;
+}
+
+.price{
+  margin:6px 0;
+  color:var(--gold);
+  font-weight:bold;
+}
+
+/* ===== Buttons ===== */
+.btn{
+  display:block;
+  margin-top:8px;
+  padding:8px;
+  background:var(--black);
+  color:white;
+  text-decoration:none;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.btn-wa{
+  background:var(--blue);
+}
+
+/* ===== Hidden ===== */
+.hidden{display:none}
+
 /* ===== Lightbox ===== */
 #lightbox{
   position:fixed;
@@ -96,14 +160,16 @@ body{
   justify-content:center;
   z-index:1000;
 }
+
 #lightbox img{
   max-width:90%;
   max-height:90%;
 }
+
 #close{
   position:absolute;
-  top:15px;
-  right:20px;
+  top:20px;
+  left:20px;
   font-size:32px;
   color:white;
   cursor:pointer;
@@ -113,13 +179,18 @@ body{
 
 <body>
 
-<div class="banner">منتجاتي</div>
+<!-- ===== Banner ===== -->
+<div class="banner">
+  <h1>Volerx</h1>
+  <p>زينة رمضان | فوانيس | لافتات</p>
+</div>
 
 <div id="loader">⏳ جاري تحميل المنتجات...</div>
 
 <div id="categories" class="grid hidden"></div>
 <div id="products" class="grid hidden"></div>
 
+<!-- ===== Lightbox ===== -->
 <div id="lightbox" class="hidden">
   <span id="close" onclick="closeImg()">✕</span>
   <img id="bigImg">
@@ -129,12 +200,12 @@ body{
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
 let data=[];
 
-/* ===== Fetch CSV ===== */
+/* ===== Fetch Products ===== */
 fetch(SHEET_URL)
 .then(r=>r.text())
 .then(text=>{
   const lines=text.trim().split("\n");
-  const headers=lines[0].split(",").map(h=>h.trim());
+  const headers=lines[0].split(",");
 
   for(let i=1;i<lines.length;i++){
     const row=lines[i].split(",");
@@ -160,14 +231,18 @@ function showCategories(){
   const cats=[...new Set(data.map(p=>p["القسم"]))];
 
   cats.forEach(cat=>{
-    const imgs=data.filter(p=>p["القسم"]===cat).map(p=>p["رابط الصورة"]).slice(0,3);
+    const imgs=data.filter(p=>p["القسم"]===cat)
+                   .map(p=>p["رابط الصورة"])
+                   .slice(0,3);
 
     categories.innerHTML+=`
       <div class="card" onclick="openCategory('${cat}')">
         <div class="slider">
-          ${imgs.map(i=><img src="${i}">).join("")}
+          ${imgs.map(i=>`<img src="${i}">`).join("")}
         </div>
-        <div class="info">${cat}</div>
+        <div class="info">
+          <h3>${cat}</h3>
+        </div>
       </div>
     `;
   });
@@ -185,8 +260,12 @@ function openCategory(cat){
       <div class="card">
         <img src="${p["رابط الصورة"]}" onclick="openImg('${p["رابط الصورة"]}')">
         <div class="info">
-          ${p["اسم المنتج"]}<br>
-          ${p["السعر"]} ₪
+          <h3>${p["اسم المنتج"]}</h3>
+          <div class="price">${p["السعر"]} ₪</div>
+          <a class="btn btn-wa" target="_blank"
+             href="https://wa.me/XXXXXXXXXX?text=السلام عليكم، أرغب بشراء ${p["اسم المنتج"]}">
+             طلب عبر واتساب
+          </a>
         </div>
       </div>
     `;
@@ -198,6 +277,7 @@ function openImg(src){
   bigImg.src=src;
   lightbox.classList.remove("hidden");
 }
+
 function closeImg(){
   lightbox.classList.add("hidden");
 }
@@ -210,3 +290,4 @@ window.onpopstate=()=>{
 
 </body>
 </html>
+
