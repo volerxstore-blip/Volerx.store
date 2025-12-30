@@ -79,6 +79,14 @@ header {
   margin-bottom: 10px;
 }
 
+/* ====== CATEGORY TITLE ====== */
+.category-title {
+  grid-column: 1 / -1;
+  margin: 25px 0 10px;
+  font-size: 20px;
+  color: #0d6efd;
+}
+
 /* ====== LIGHTBOX ====== */
 #lightbox {
   position: fixed;
@@ -105,6 +113,13 @@ header {
   padding: 5px 10px;
   cursor: pointer;
 }
+
+/* ====== LOADING ====== */
+#loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
 </style>
 </head>
 
@@ -116,6 +131,7 @@ header {
 </header>
 
 <div class="container">
+  <div id="loading">⏳ جاري تحميل المنتجات...</div>
   <div id="categories" class="grid"></div>
   <div id="products" class="grid" style="display:none;"></div>
 </div>
@@ -127,36 +143,53 @@ header {
 </div>
 
 <script>
-const SHEET_URL = "PUT_YOUR_CSV_LINK_HERE";
+const categoriesContainer = document.getElementById("categories");
+const productsContainer = document.getElementById("products");
+const loading = document.getElementById("loading");
+
+// ====================
+// ضع هنا رابط Google Sheet الخاص بك بصيغة CSV
+// مثال: "https://docs.google.com/spreadsheets/d/ID/export?format=csv"
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQY3NsJAn1x4wBXXAQnEkZ5ynSfCSMfU0NpBQhDtMPKOdjfYhduKX8ow3W0wSWd34oz6n75XlvuWh0W/pub?gid=1489177387&single=true&output=csv";
+// ====================
 
 let categoriesData = {};
 
 fetch(SHEET_URL)
   .then(res => res.text())
   .then(data => {
+    loading.style.display = "none"; // إخفاء التحميل
     const rows = data.split("\n").slice(1);
+
     rows.forEach(row => {
+      if(!row.trim()) return; // تجاهل الصفوف الفارغة
       const [t, name, price, image, category] = row.split(",");
       if(!name || !price || !image || !category) return;
 
-      if(!categoriesData[category]) {
-        categoriesData[category] = [];
+      const catName = category.trim();
+
+      if(!categoriesData[catName]) {
+        categoriesData[catName] = [];
       }
 
-      categoriesData[category].push({name, price, image});
+      categoriesData[catName].push({name: name.trim(), price: price.trim(), image: image.trim()});
     });
 
     renderCategories();
+  })
+  .catch(err => {
+    loading.innerText = "❌ فشل تحميل البيانات، تحقق من الرابط";
+    console.error(err);
   });
 
+// ======== FUNCTIONS ========
 function renderCategories() {
-  const container = document.getElementById("categories");
-  container.innerHTML = "";
+  categoriesContainer.innerHTML = "";
 
   Object.keys(categoriesData).slice(0,3).forEach(cat => {
     const firstProduct = categoriesData[cat][0];
 
-    container.innerHTML += `
+    categoriesContainer.innerHTML += `
       <div class="card" onclick="openCategory('${cat}')">
         <div class="image-box">
           <img src="${firstProduct.image}">
@@ -170,17 +203,15 @@ function renderCategories() {
 function openCategory(cat) {
   document.getElementById("title").innerText = cat;
   document.getElementById("backBtn").style.display = "block";
-  document.getElementById("categories").style.display = "none";
-
-  const container = document.getElementById("products");
-  container.style.display = "grid";
-  container.innerHTML = "";
+  categoriesContainer.style.display = "none";
+  productsContainer.style.display = "grid";
+  productsContainer.innerHTML = "";
 
   categoriesData[cat].forEach(p => {
-    container.innerHTML += `
+    productsContainer.innerHTML += `
       <div class="card">
         <div class="image-box" onclick="openLightbox('${p.image}')">
-          <img src="${p.image}">
+          <img src="${p.image}" loading="lazy">
         </div>
         <h3>${p.name}</h3>
         <div class="price">${p.price}</div>
@@ -192,10 +223,11 @@ function openCategory(cat) {
 function showCategories() {
   document.getElementById("title").innerText = "الأقسام";
   document.getElementById("backBtn").style.display = "none";
-  document.getElementById("products").style.display = "none";
-  document.getElementById("categories").style.display = "grid";
+  productsContainer.style.display = "none";
+  categoriesContainer.style.display = "grid";
 }
 
+// ===== LIGHTBOX =====
 function openLightbox(src) {
   document.getElementById("lightboxImg").src = src;
   document.getElementById("lightbox").style.display = "flex";
