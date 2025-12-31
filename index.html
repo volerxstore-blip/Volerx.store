@@ -1,250 +1,147 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>Volerx | زينة رمضان</title>
+    <meta charset="UTF-8">
+    <title>الأقسام والمنتجات</title>
 
-<style>
-:root{
-  --bg:#f7f7f7;
-  --card:#ffffff;
-  --light:#fdf6e9;
-  --gold:#c9a24d;
-  --blue:#0a1f44;
-  --black:#111;
-}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            padding: 20px;
+            direction: rtl;
+        }
 
-*{box-sizing:border-box}
+        /* القسم */
+        .section {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
 
-body{
-  margin:0;
-  font-family:Arial, sans-serif;
-  background:var(--bg);
-  color:var(--black);
-}
+        .section-header {
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
 
-/* ===== Banner ===== */
-.banner{
-  height:180px;
-  background:
-    linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.55)),
-    url("https://i.postimg.cc/9FR514MS/38CF47CD-3735-4111-8683-B0AC11C51C59.png")
-    center/cover no-repeat;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  color:white;
-}
+        .section-content {
+            display: none;
+            padding: 15px;
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
-.banner h1{
-  margin:0;
-  font-size:36px;
-}
+        /* المنتجات */
+        .product {
+            display: inline-block;
+            width: 120px;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
 
-.brand-line{
-  width:90px;
-  height:3px;
-  margin-top:10px;
-  background:linear-gradient(to right,var(--gold),var(--blue));
-  border-radius:10px;
-}
+        .product:hover {
+            transform: scale(1.05);
+        }
 
-/* ===== Loader ===== */
-#loader{
-  text-align:center;
-  padding:40px;
-}
+        .product img {
+            width: 100%;
+            border-radius: 8px;
+        }
 
-/* ===== Grid ===== */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-  gap:16px;
-  padding:16px;
-}
+        /* Overlay الصورة */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
 
-/* ===== Cards ===== */
-.card{
-  background:var(--card);
-  border-radius:14px;
-  overflow:hidden;
-  box-shadow:0 4px 10px rgba(0,0,0,.1);
-}
+        .overlay img {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 10px;
+        }
 
-/* ===== Category Card (فاتح بوضوح) ===== */
-.category{
-  background:var(--light);
-  border:1px solid rgba(201,162,77,.4);
-  cursor:pointer;
-}
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 32px;
+            color: white;
+            cursor: pointer;
+        }
 
-/* ===== Images ===== */
-.card img{
-  width:100%;
-  height:160px;
-  object-fit:cover;
-}
-
-/* ===== Info ===== */
-.info{
-  padding:12px;
-  text-align:center;
-}
-
-.info h3{
-  margin:0;
-  font-size:15px;
-}
-
-/* ===== Product ===== */
-.price{
-  color:var(--gold);
-  font-weight:bold;
-  margin-top:6px;
-}
-
-.btn{
-  display:block;
-  margin-top:10px;
-  padding:8px;
-  background:var(--blue);
-  color:white;
-  text-decoration:none;
-  border-radius:8px;
-  font-size:14px;
-}
-
-/* ===== Utility ===== */
-.hidden{display:none}
-
-/* ===== Lightbox ===== */
-#lightbox{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.9);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-#lightbox img{
-  max-width:90%;
-  max-height:90%;
-}
-</style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
-
 <body>
 
-<div class="banner">
-  <h1>Volerx</h1>
-  <div class="brand-line"></div>
+<div class="section">
+    <div class="section-header" onclick="toggleSection()">
+        <h2>القسم الأول</h2>
+    </div>
+
+    <div class="section-content" id="sectionContent">
+        <div class="product" onclick="showImage('https://via.placeholder.com/600')">
+            <img src="https://via.placeholder.com/150">
+            <p>منتج 1</p>
+        </div>
+
+        <div class="product" onclick="showImage('https://via.placeholder.com/600/ff0000')">
+            <img src="https://via.placeholder.com/150/ff0000">
+            <p>منتج 2</p>
+        </div>
+
+        <div class="product" onclick="showImage('https://via.placeholder.com/600/00ff00')">
+            <img src="https://via.placeholder.com/150/00ff00">
+            <p>منتج 3</p>
+        </div>
+    </div>
 </div>
 
-<div id="loader">⏳ جاري تحميل المنتجات...</div>
-
-<div id="categories" class="grid hidden"></div>
-<div id="products" class="grid hidden"></div>
-
-<div id="lightbox" class="hidden" onclick="closeImg()">
-  <img id="bigImg">
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeImage(event)">
+    <span class="close-btn" onclick="hideImage()">✖</span>
+    <img id="overlayImage">
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
+    function toggleSection() {
+        const content = document.getElementById("sectionContent");
+        content.style.display =
+            content.style.display === "block" ? "none" : "block";
+    }
 
-const loader = document.getElementById("loader");
-const categoriesEl = document.getElementById("categories");
-const productsEl = document.getElementById("products");
-const lightbox = document.getElementById("lightbox");
-const bigImg = document.getElementById("bigImg");
+    function showImage(src) {
+        const overlay = document.getElementById("overlay");
+        const image = document.getElementById("overlayImage");
+        image.src = src;
+        overlay.style.display = "flex";
+    }
 
-let products = [];
+    function hideImage() {
+        document.getElementById("overlay").style.display = "none";
+    }
 
-/* ===== Fetch ===== */
-fetch(SHEET_URL)
-.then(res => res.text())
-.then(text => {
-  const rows = text.trim().split("\n").map(r=>r.split(","));
-  const headers = rows.shift();
-
-  rows.forEach(r=>{
-    let p = {};
-    headers.forEach((h,i)=>p[h.trim()] = r[i]);
-    if(p["اسم المنتج"]) products.push(p);
-  });
-
-  loader.classList.add("hidden");
-  renderCategories();
-})
-.catch(()=> loader.innerText="❌ فشل تحميل البيانات");
-
-/* ===== Render Categories ===== */
-function renderCategories(){
-  categoriesEl.innerHTML="";
-  categoriesEl.classList.remove("hidden");
-  productsEl.classList.add("hidden");
-
-  const cats = [...new Set(products.map(p=>p["القسم"].trim()))];
-
-  cats.forEach(cat=>{
-    const firstImg = products.find(p=>p["القسم"]===cat)?.["رابط الصورة"];
-
-    const div = document.createElement("div");
-    div.className = "card category";
-    div.dataset.category = cat;
-
-    div.innerHTML = `
-      <img src="${firstImg}">
-      <div class="info"><h3>${cat}</h3></div>
-    `;
-
-    div.addEventListener("click", ()=>{
-      openCategory(div.dataset.category);
-    });
-
-    categoriesEl.appendChild(div);
-  });
-}
-
-/* ===== Open Category (مضمون) ===== */
-function openCategory(cat){
-  productsEl.innerHTML="";
-  categoriesEl.classList.add("hidden");
-  productsEl.classList.remove("hidden");
-
-  products
-    .filter(p=>p["القسم"].trim()===cat)
-    .forEach(p=>{
-      const div = document.createElement("div");
-      div.className = "card";
-      div.innerHTML = `
-        <img src="${p["رابط الصورة"]}">
-        <div class="info">
-          <h3>${p["اسم المنتج"]}</h3>
-          <div class="price">${p["السعر"]} ₪</div>
-          <a class="btn" target="_blank"
-             href="https://wa.me/XXXXXXXXXX?text=أرغب بشراء ${p["اسم المنتج"]}">
-             طلب عبر واتساب
-          </a>
-        </div>
-      `;
-      div.querySelector("img").onclick = ()=> openImg(p["رابط الصورة"]);
-      productsEl.appendChild(div);
-    });
-}
-
-/* ===== Lightbox ===== */
-function openImg(src){
-  bigImg.src = src;
-  lightbox.classList.remove("hidden");
-}
-function closeImg(){
-  lightbox.classList.add("hidden");
-}
-bigImg.onclick = e => e.stopPropagation();
+    function closeImage(e) {
+        if (e.target.id === "overlay") {
+            hideImage();
+        }
+    }
 </script>
 
 </body>
 </html>
+
