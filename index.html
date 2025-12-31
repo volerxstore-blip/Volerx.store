@@ -1,28 +1,18 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Volerx | منتجاتي</title>
+<link rel="icon" href="PUT_LOGO_IMAGE_URL_HERE">
 
 <style>
-:root {
-  --bg: #0f0f0f;
-  --card: #ffffff;
-  --text-dark: #000;
-  --text-light: #fff;
-}
-
-* {
-  box-sizing: border-box;
-  font-family: system-ui, sans-serif;
-}
-
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text-light);
+  background: #0e0e0e;
+  color: white;
+  font-family: system-ui, sans-serif;
 }
 
 header {
@@ -34,15 +24,6 @@ header {
 
 .hidden { display: none; }
 
-.back-btn {
-  position: fixed;
-  top: 15px;
-  left: 15px;
-  font-size: 22px;
-  cursor: pointer;
-  z-index: 10;
-}
-
 #categories, #products {
   padding: 20px;
   display: grid;
@@ -53,45 +34,38 @@ header {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
 }
 
-.category-card {
-  background: var(--card);
-  color: var(--text-dark);
-  border-radius: 12px;
+.category {
+  background: white;
+  color: black;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
 }
 
-.category-card img {
+.category img {
   width: 100%;
   height: 200px;
   object-fit: cover;
-  animation: slide 6s infinite;
 }
 
 .category-name {
   padding: 10px;
-  font-weight: bold;
   text-align: center;
-}
-
-@keyframes slide {
-  0% { opacity: 1; }
-  33% { opacity: 0.7; }
-  66% { opacity: 0.9; }
+  font-weight: bold;
 }
 
 #products {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 
-.product-card {
-  background: var(--card);
-  color: var(--text-dark);
+.product {
+  background: white;
+  color: black;
   border-radius: 12px;
   padding: 10px;
 }
 
-.product-card img {
+.product img {
   width: 100%;
   height: 180px;
   object-fit: cover;
@@ -99,13 +73,13 @@ header {
   cursor: pointer;
 }
 
-.product-name {
-  margin-top: 8px;
-  font-weight: bold;
-}
-
-.product-price {
-  color: #444;
+.back {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 10;
 }
 
 /* Modal */
@@ -124,11 +98,11 @@ header {
   max-height: 90%;
 }
 
-#closeModal {
+#close {
   position: absolute;
   top: 20px;
   right: 20px;
-  font-size: 26px;
+  font-size: 28px;
   color: white;
   cursor: pointer;
 }
@@ -138,119 +112,114 @@ header {
 <body>
 
 <header id="title">منتجات Volerx</header>
-<div class="back-btn hidden" id="backBtn">←</div>
+<div class="back hidden" id="back">←</div>
 
-<div id="loading">⏳ جاري تحميل المنتجات…</div>
+<div id="loading">⏳ جاري تحميل المنتجات...</div>
 
 <div id="categories"></div>
 <div id="products" class="hidden"></div>
 
 <div id="modal" class="hidden">
-  <div id="closeModal">✕</div>
+  <div id="close">✕</div>
   <img id="modalImg">
 </div>
 
 <script>
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTlN-9WaF9E7jxo836CniVtu6NG1BFJONmi34JAibeRyo1WXtuaW0fpoPz5Ntv8s4eUfmrKIq22CRlS/pub?gid=1564525727&single=true&output=csv";
 
 const categoriesDiv = document.getElementById("categories");
 const productsDiv = document.getElementById("products");
 const loading = document.getElementById("loading");
-const backBtn = document.getElementById("backBtn");
+const back = document.getElementById("back");
 const title = document.getElementById("title");
 
-let allProducts = [];
+let products = [];
 
-fetch(SHEET_URL)
-  .then(r => r.text())
+fetch(CSV_URL)
+  .then(res => res.text())
   .then(csv => {
     const rows = csv.split("\n").slice(1);
-    rows.forEach(row => {
-      const [ , name, price, image, category ] = row.split(",");
-      if(name && image && category){
-        allProducts.push({name, price, image, category});
+    rows.forEach(r => {
+      const cols = r.split(",");
+      if(cols.length >= 5){
+        products.push({
+          name: cols[1],
+          price: cols[2],
+          image: cols[3],
+          category: cols[4].trim()
+        });
       }
     });
     loading.remove();
-    showCategories();
+    renderCategories();
   });
 
-function showCategories(){
+function renderCategories(){
   title.textContent = "منتجات Volerx";
   categoriesDiv.innerHTML = "";
   categoriesDiv.classList.remove("hidden");
   productsDiv.classList.add("hidden");
-  backBtn.classList.add("hidden");
+  back.classList.add("hidden");
 
-  const groups = {};
-  allProducts.forEach(p => {
-    if(!groups[p.category]) groups[p.category] = [];
-    groups[p.category].push(p);
+  const unique = {};
+  products.forEach(p => {
+    if(!unique[p.category]) unique[p.category] = p.image;
   });
 
-  for(const cat in groups){
-    const card = document.createElement("div");
-    card.className = "category-card";
-
-    const img = document.createElement("img");
-    img.src = groups[cat][0].image;
-
-    const name = document.createElement("div");
-    name.className = "category-name";
-    name.textContent = cat;
-
-    card.append(img, name);
-    card.onclick = () => showProducts(cat);
-
-    categoriesDiv.appendChild(card);
-  }
+  Object.keys(unique).forEach(cat => {
+    const div = document.createElement("div");
+    div.className = "category";
+    div.innerHTML = `
+      <img src="${unique[cat]}">
+      <div class="category-name">${cat}</div>
+    `;
+    div.onclick = () => renderProducts(cat);
+    categoriesDiv.appendChild(div);
+  });
 }
 
-function showProducts(category){
-  history.pushState({}, "", "#"+category);
-  title.textContent = category + " | Volerx";
-  backBtn.classList.remove("hidden");
+function renderProducts(cat){
+  history.pushState({}, "", "#"+cat);
+  title.textContent = cat + " | Volerx";
+  back.classList.remove("hidden");
 
   categoriesDiv.classList.add("hidden");
   productsDiv.classList.remove("hidden");
   productsDiv.innerHTML = "";
 
-  allProducts.filter(p => p.category === category)
+  products.filter(p => p.category === cat)
     .forEach(p => {
-      const card = document.createElement("div");
-      card.className = "product-card";
-
-      const img = document.createElement("img");
-      img.src = p.image;
-      img.onclick = () => openModal(p.image);
-
-      card.innerHTML = `
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">${p.price} ₪</div>
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img src="${p.image}">
+        <div><b>${p.name}</b></div>
+        <div>${p.price} ₪</div>
       `;
-
-      card.prepend(img);
-      productsDiv.appendChild(card);
+      div.querySelector("img").onclick = () => openModal(p.image);
+      productsDiv.appendChild(div);
     });
 }
 
-backBtn.onclick = () => {
+back.onclick = () => {
   history.back();
-  showCategories();
+  renderCategories();
 };
 
-window.onpopstate = () => showCategories();
+window.onpopstate = () => renderCategories();
 
 const modal = document.getElementById("modal");
 const modalImg = document.getElementById("modalImg");
+const closeBtn = document.getElementById("close");
 
 function openModal(src){
   modalImg.src = src;
   modal.classList.remove("hidden");
 }
 
-document.getElementById("closeModal").onclick = () =>
+closeBtn.onclick = () => {
   modal.classList.add("hidden");
+};
 </script>
 
 </body>
